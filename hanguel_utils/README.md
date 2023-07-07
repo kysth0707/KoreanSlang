@@ -1,0 +1,1 @@
+https://github.com/kaniblu/hangul-utils/blob/master/hangul_utils/unicode.py

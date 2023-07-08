@@ -86,11 +86,74 @@ def toHappyWord(txt : str, badToHappyDict : dict) -> tuple:
 		# 비속어
 		return (check, BADWORD)
 
-# ================== 비속어 포함 체크 ==================
+# ================== 문장을 순화어로 변환 ==================
 
-# def checkBadword(txt : str) -> str:
+def toHappyWriting(joinedJamo : str, badToHappyDict : dict) -> str:
+	"""
+	### 입력된 문장을 순화어로 반환합니다.
+	toHappyWriting("이런tlqkf?")
+	->
+	이런아니?
+	"""
 
-# 	return ""
+	checkedBadwords = []
+	for a in badToHappyDict.keys():
+		if a in joinedJamo:
+			checkedBadwords.append((joinedJamo.find(a), a, badToHappyDict[a]))
+	checkedBadwords.sort(key=lambda x : x[0])
+	newCheckedBadwords = []
+	i = 0
+	while True:
+		if i >= len(checkedBadwords):
+			break
+		a = checkedBadwords[i]
+		zipIt = []
+		zipIt.append(a)
+		ii = 0
+		while True:
+			ii += 1
+			if ii + i >= len(checkedBadwords):
+				break
+			b = checkedBadwords[i + ii]
+			if a[0] != b[0]:
+				break
+			else:
+				zipIt.append(b)
+				i+=1
+				ii-=1
+		if len(zipIt) != 1:
+			newCheckedBadwords.append(sorted(zipIt, key=lambda x : len(x[1]), reverse=True)[0])
+		else:
+			newCheckedBadwords.append(zipIt[0])
+		i+=1
+
+	splitPoses = []
+	for item in newCheckedBadwords:
+		start,end=item[0], item[0] + len(item[1])
+		# print(joinedJamo[start:end])
+		splitPoses.append(start)
+		splitPoses.append(end)
+	try:
+		if splitPoses[0] != 0:
+			splitPoses.insert(0, 0)
+	except:
+		splitPoses.append(0)
+	if splitPoses[:-1] != len(joinedJamo):
+		splitPoses.append(len(joinedJamo))
+
+	canSend = True
+
+	toGoodWords = []
+	for i in range(len(splitPoses) - 1):
+		txt = joinedJamo[splitPoses[i] : splitPoses[i+1]]
+		if badToHappyDict.get(txt) == False:
+			canSend = False
+		elif badToHappyDict.get(txt) == None:
+			toGoodWords.append(txt)
+		else:
+			toGoodWords.append(badToHappyDict[txt])
+
+	return ("".join(toGoodWords), canSend)
 
 
 # ================== DB 로드 ==================

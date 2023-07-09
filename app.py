@@ -40,4 +40,4 @@ async def convert(txt : str):
 	}
 
 if __name__ == "__main__":
-	uvicorn.run("app:app", host="0.0.0.0", port=999, reload=True)
+	uvicorn.run("app:app", host="0.0.0.0", port=7979, reload=True)

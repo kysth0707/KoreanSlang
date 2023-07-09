@@ -238,7 +238,7 @@ def __rSpace(txt : str) -> str:
     return txt.replace(' ','',9999)
 
 def __refreshCircumvent() -> dict:
-	CircumventingWordPath = r'E:\GithubProjects\KoreanSlang\datasets\CircumventingWords.txt'
+	CircumventingWordPath = "./datasets/CircumventingWords.txt"
 	# 우회단어 위치
 
 	CircumventText = []
@@ -272,7 +272,7 @@ def getCircumventDict() -> dict:
 
 def __refreshBadToHappy() -> dict:
 	alphabets = "abcdefghijklmnopqrtuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	ToHappyWordPath = r'E:\GithubProjects\KoreanSlang\datasets\ToHappyWords.txt'
+	ToHappyWordPath = "./datasets/ToHappyWords.txt"
 	BadToHappyText = []
 	with open(ToHappyWordPath, 'r', encoding='utf8') as f:
 		BadToHappyText = f.readlines()

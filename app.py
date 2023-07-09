@@ -28,17 +28,13 @@ def home():
 @app.get('/convert/{txt}')
 async def convert(txt : str):
 	lastTime = time.time()
-	restoredText = module.restoreSplitedWord(txt, circumventDict)
-	joinedJamo = module.join_jamos(restoredText)
 
-	convertedWord = ""
-	canSend = True
-	convertedWord, canSend = module.toHappyWriting(joinedJamo, badToHappyDict)
+	convertedWord, joinedJamo, canSend, changedWordCount, = module.convertToGoodWriting(txt, circumventDict, badToHappyDict)
 	return {
 		'canSend' : canSend,
 		'originalWord' : txt,
-		'restoredText' : restoredText,
 		'joinedJamo' : joinedJamo,
+		'changedWordCount' : changedWordCount,
 		'convertedWord' : convertedWord,
 		'time' : time.time() - lastTime
 	}

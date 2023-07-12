@@ -86,9 +86,151 @@ def __toHappyWord(txt : str, badToHappyDict : dict) -> tuple:
 	else:
 		# 비속어
 		return (check, BADWORD)
-	
+
 def convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDict : dict) -> tuple:
 	"""
+	### 입력된 문장을 (순화어, 수정된자모, 출력가능여부, 수정단어수)로 반환합니다.
+	"이런Tlqkf?"
+	->
+	("이런아니?", "이런씨발?" True, 2)
+
+	### 텍스트 변환 가중치
+	#### -1 * (조합된 텍스트의 길이) + (수정 단어 수)
+	"""	
+
+	splitHans = splitHan(originalText)
+	
+
+	boolBoxLen = []
+	recoveredText = []
+	for txt in splitHans:
+		if circumventDict.get(txt) == None:
+			recoveredText.append(txt)
+		else:
+			a = circumventDict.get(txt)
+			if len(a) == 1:
+				recoveredText.append(a[0])
+			else:
+				boolBoxLen.append(len(a))
+				recoveredText.append(a)
+
+	newRecoveredText = []
+	lastNum = 0
+	for i, txt in enumerate(recoveredText):
+		if type(txt) == list:
+			if lastNum - i != 0:
+				newRecoveredText.append("".join(recoveredText[lastNum:i]))
+			newRecoveredText.append(recoveredText[i])
+			lastNum = i+1
+	if lastNum - len(recoveredText) - 1 != 0:
+		newRecoveredText.append("".join(recoveredText[lastNum:len(recoveredText)]))
+	newRecoveredText
+
+	listPoses = []
+	for i, item in enumerate(newRecoveredText):
+		if type(item) == list:
+			listPoses.append(i)
+	
+	fullCount = 1
+	for x in boolBoxLen:
+		fullCount *= x
+
+	convertedTxts = []
+	intBox = [0 for _ in range(len(boolBoxLen))]
+	for _ in range(fullCount):
+		for i in range(len(boolBoxLen)):
+			if intBox[-i] >= boolBoxLen[-i]:
+				intBox[-i] = 0
+				intBox[-i-1] += 1
+		tmp = newRecoveredText.copy()
+		for i in range(len(boolBoxLen)):
+			tmp[listPoses[i]] = newRecoveredText[listPoses[i]][intBox[i]]
+		# print("".join(tmp), end=", ")
+		joinedJamo = joinHan("".join(tmp))
+		# print(joinedJamo)
+		convertedTxts.append((toHappyWriting(joinedJamo, badToHappyDict)[2] - len(joinedJamo) ,intBox.copy()))
+
+		intBox[-1] += 1
+	predictValue = sorted(convertedTxts, key=lambda x : x[0], reverse=True)[0]
+	predictValue = predictValue[1]
+
+	realText = []
+	i = 0
+	for txt in recoveredText:
+		if type(txt) == list:
+			realText.append(txt[predictValue[i]])
+			i += 1
+		else:
+			realText.append(txt)
+	realText
+
+	
+	joinedJamo = joinHan(realText)
+	checkedBadwords = []
+	for a in badToHappyDict.keys():
+		if a in joinedJamo:
+			checkedBadwords.append((joinedJamo.find(a), a, badToHappyDict[a]))
+	checkedBadwords.sort(key=lambda x : x[0])
+	newCheckedBadwords = []
+	i = 0
+	while True:
+		if i >= len(checkedBadwords):
+			break
+		a = checkedBadwords[i]
+		zipIt = []
+		zipIt.append(a)
+		ii = 0
+		while True:
+			ii += 1
+			if ii + i >= len(checkedBadwords):
+				break
+			b = checkedBadwords[i + ii]
+			if a[0] != b[0]:
+				break
+			else:
+				zipIt.append(b)
+				i+=1
+				ii-=1
+		if len(zipIt) != 1:
+			newCheckedBadwords.append(sorted(zipIt, key=lambda x : len(x[1]), reverse=True)[0])
+		else:
+			newCheckedBadwords.append(zipIt[0])
+		i+=1
+
+
+	txtLen = []
+	hap = 0
+	for txt in joinedJamo:
+		hap += len(splitHan(txt))
+		txtLen.append(hap)
+	
+	replaceDatas = []
+	for item in newCheckedBadwords:
+		start,end=item[0], item[0] + len(item[1])
+		replaceDatas.append(((txtLen[start-1], txtLen[end-1]), item[2]))
+	
+	canSend = True
+	a = list(splitHans)
+	for item in replaceDatas:
+		start,end = item[0]
+		replaceText = ["" for _ in range(end-start)]
+		if item[1] == False:
+			canSend = False
+			a[start:end] = replaceText
+		else:
+			replaceText[0] = item[1]
+			a[start:end] = replaceText
+
+	return (joinHan("".join(a)), 
+			joinHan("".join(realText)), 
+			canSend, 
+			len(replaceDatas))
+
+	
+
+def __convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDict : dict) -> tuple:
+	"""
+	※ 더 이상 안 쓰임
 	### 입력된 문장을 (순화어, 수정된자모, 출력가능여부, 수정단어수)로 반환합니다.
 	"이런Tlqkf?"
 	->
@@ -162,6 +304,69 @@ def convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDi
 
 # ================== 문장을 순화어로 변환 ==================
 
+def badWordPos(joinedJamo : str, badToHappyDict : dict) -> str:
+	checkedBadwords = []
+	for a in badToHappyDict.keys():
+		if a in joinedJamo:
+			checkedBadwords.append((joinedJamo.find(a), a, badToHappyDict[a]))
+	checkedBadwords.sort(key=lambda x : x[0])
+	newCheckedBadwords = []
+	i = 0
+	while True:
+		if i >= len(checkedBadwords):
+			break
+		a = checkedBadwords[i]
+		zipIt = []
+		zipIt.append(a)
+		ii = 0
+		while True:
+			ii += 1
+			if ii + i >= len(checkedBadwords):
+				break
+			b = checkedBadwords[i + ii]
+			if a[0] != b[0]:
+				break
+			else:
+				zipIt.append(b)
+				i+=1
+				ii-=1
+		if len(zipIt) != 1:
+			newCheckedBadwords.append(sorted(zipIt, key=lambda x : len(x[1]), reverse=True)[0])
+		else:
+			newCheckedBadwords.append(zipIt[0])
+		i+=1
+
+	splitPoses = []
+	for item in newCheckedBadwords:
+		start,end=item[0], item[0] + len(item[1])
+		# print(joinedJamo[start:end])
+		splitPoses.append(start)
+		splitPoses.append(end)
+	try:
+		if splitPoses[0] != 0:
+			splitPoses.insert(0, 0)
+	except:
+		splitPoses.append(0)
+	if splitPoses[:-1] != len(joinedJamo):
+		splitPoses.append(len(joinedJamo))
+
+	canSend = True
+
+	changedWordCount = 0
+	toGoodWords = []
+	for i in range(len(splitPoses) - 1):
+		txt = joinedJamo[splitPoses[i] : splitPoses[i+1]]
+		if badToHappyDict.get(txt) == False:
+			canSend = False
+		elif badToHappyDict.get(txt) == None:
+			toGoodWords.append(txt)
+		else:
+			changedWordCount += len(txt)
+			toGoodWords.append(badToHappyDict[txt])
+
+	return ("".join(toGoodWords), canSend, changedWordCount)
+
+
 def toHappyWriting(joinedJamo : str, badToHappyDict : dict) -> str:
 	"""
 	### 입력된 문장을 (순화어, 출력가능여부, 수정단어수)로 반환합니다.
@@ -200,7 +405,7 @@ def toHappyWriting(joinedJamo : str, badToHappyDict : dict) -> str:
 		else:
 			newCheckedBadwords.append(zipIt[0])
 		i+=1
-
+	
 	splitPoses = []
 	for item in newCheckedBadwords:
 		start,end=item[0], item[0] + len(item[1])

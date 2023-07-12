@@ -150,7 +150,10 @@ def convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDi
 		# print(joinedJamo)
 		convertedTxts.append((toHappyWriting(joinedJamo, badToHappyDict)[2] - len(joinedJamo) ,intBox.copy()))
 
-		intBox[-1] += 1
+		try:
+			intBox[-1] += 1
+		except:
+			pass
 	predictValue = sorted(convertedTxts, key=lambda x : x[0], reverse=True)[0]
 	predictValue = predictValue[1]
 
@@ -162,7 +165,7 @@ def convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDi
 			i += 1
 		else:
 			realText.append(txt)
-	realText
+	# realText
 
 	
 	joinedJamo = joinHan(realText)

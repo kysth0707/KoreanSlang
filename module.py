@@ -206,6 +206,7 @@ def convertToGoodWriting(originalText : str, circumventDict : dict, badToHappyDi
 	for txt in joinedJamo:
 		hap += len(splitHan(txt))
 		txtLen.append(hap)
+	txtLen.append(0)
 	
 	replaceDatas = []
 	for item in newCheckedBadwords:
